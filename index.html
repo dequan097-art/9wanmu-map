@@ -87,28 +87,28 @@ function loadPlayers(){
       document.getElementById('alliances').innerHTML = '';
       activeAlliances.clear();
 
-      data.forEach(row=>{
-        var name = row["玩家"];      // 对应你 JSON 字段
-        var alliance = row["联盟名字"];
-        var x = parseFloat(row["X坐标"]);
-        var y = parseFloat(row["Y坐标"]);
+data.forEach(row=>{
+  var name = row["玩家"];        // 修正为实际字段
+  var alliance = row["联盟名字"]; // 修正为实际字段
+  var x = parseFloat(row["X坐标"]);
+  var y = parseFloat(row["Y坐标"]);
 
-        if(!allianceColors[alliance]) allianceColors[alliance] = getRandomColor();
-        createAllianceCheckbox(alliance);
-        activeAlliances.add(safeId(alliance));
+  if(!allianceColors[alliance]) allianceColors[alliance] = getRandomColor();
+  createAllianceCheckbox(alliance);
+  activeAlliances.add(safeId(alliance));
 
-        var marker = L.circleMarker([y,x], {
-          radius:6,
-          color: allianceColors[alliance],
-          fillColor: allianceColors[alliance],
-          fillOpacity:1
-        }).addTo(map)
-        .bindPopup("玩家："+name+"<br>联盟："+alliance+"<br>坐标:("+x+","+y+")");
+  var marker = L.circleMarker([y,x], {
+    radius:6,
+    color: allianceColors[alliance],
+    fillColor: allianceColors[alliance],
+    fillOpacity:1
+  }).addTo(map)
+  .bindPopup("玩家："+name+"<br>联盟："+alliance+"<br>坐标:("+x+","+y+")");
 
-        marker.playerName = name.toLowerCase();
-        marker.alliance = alliance;
-        allMarkers.push(marker);
-      });
+  marker.playerName = name.toLowerCase();
+  marker.alliance = alliance;
+  allMarkers.push(marker);
+});
 
       updateAllianceVisibility();
     }).catch(err=>{
