@@ -11,6 +11,7 @@
   #controls { padding:10px; background:#f0f0f0; }
   #search { width: 100%; padding:5px; font-size:16px; margin-bottom:5px; }
   .alliance-checkbox { margin-right:10px; }
+  #alliances { display:flex; flex-wrap:wrap; }
 </style>
 </head>
 <body>
@@ -36,7 +37,7 @@ for(var i=0;i<=600;i+=50){
 
 // 全部玩家点集合
 var allMarkers = [];
-var allianceColors = {}; // 动态生成颜色
+var allianceColors = {}; 
 var activeAlliances = new Set();
 
 // Apps Script Web App URL (替换为你的)
@@ -52,25 +53,25 @@ function getRandomColor(){
   return color;
 }
 
-// 安全生成 id（联盟名字里有空格或特殊字符也能用）
+// 生成安全 ID
 function safeId(str){
-  return str.replace(/\W/g,'_');
+  return encodeURIComponent(str);
 }
 
 // 创建联盟复选框
 function createAllianceCheckbox(alliance){
-  var id = safeId(alliance);
-  if(document.getElementById('chk_'+id)) return; // 已存在
+  var id = 'chk_'+safeId(alliance);
+  if(document.getElementById(id)) return; // 已存在
   var checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.checked = true;
   checkbox.className = 'alliance-checkbox';
-  checkbox.id = 'chk_'+id;
+  checkbox.id = id;
   checkbox.addEventListener('change', updateAllianceVisibility);
   document.getElementById('alliances').appendChild(checkbox);
   
   var label = document.createElement('label');
-  label.htmlFor = 'chk_'+id;
+  label.htmlFor = id;
   label.innerText = alliance;
   label.style.marginRight='15px';
   document.getElementById('alliances').appendChild(label);
@@ -81,34 +82,37 @@ function loadPlayers(){
   fetch(jsonUrl + "?t=" + new Date().getTime())
     .then(res => res.json())
     .then(data => {
+      console.log("总条目数量:", data.length); // 调试输出
+      console.log(data); // 调试输出所有数据
+
       // 清理旧点
       allMarkers.forEach(m => map.removeLayer(m));
       allMarkers = [];
       document.getElementById('alliances').innerHTML = '';
       activeAlliances.clear();
 
-data.forEach(row=>{
-  var name = row["玩家"];        // 修正为实际字段
-  var alliance = row["联盟名字"]; // 修正为实际字段
-  var x = parseFloat(row["X坐标"]);
-  var y = parseFloat(row["Y坐标"]);
+      data.forEach(row=>{
+        var name = row["玩家"] || "";
+        var alliance = row["联盟名字"] || "";
+        var x = parseFloat(row["X坐标"]) || 0;
+        var y = parseFloat(row["Y坐标"]) || 0;
 
-  if(!allianceColors[alliance]) allianceColors[alliance] = getRandomColor();
-  createAllianceCheckbox(alliance);
-  activeAlliances.add(safeId(alliance));
+        if(!allianceColors[alliance]) allianceColors[alliance] = getRandomColor();
+        createAllianceCheckbox(alliance);
+        activeAlliances.add(safeId(alliance));
 
-  var marker = L.circleMarker([y,x], {
-    radius:6,
-    color: allianceColors[alliance],
-    fillColor: allianceColors[alliance],
-    fillOpacity:1
-  }).addTo(map)
-  .bindPopup("玩家："+name+"<br>联盟："+alliance+"<br>坐标:("+x+","+y+")");
+        var marker = L.circleMarker([y,x], {
+          radius:6,
+          color: allianceColors[alliance],
+          fillColor: allianceColors[alliance],
+          fillOpacity:1
+        }).addTo(map)
+        .bindPopup("玩家："+name+"<br>联盟："+alliance+"<br>坐标:("+x+","+y+")");
 
-  marker.playerName = name.toLowerCase();
-  marker.alliance = alliance;
-  allMarkers.push(marker);
-});
+        marker.playerName = name.toLowerCase();
+        marker.alliance = safeId(alliance);
+        allMarkers.push(marker);
+      });
 
       updateAllianceVisibility();
     }).catch(err=>{
@@ -125,8 +129,7 @@ function updateAllianceVisibility(){
   
   var query = searchInput.value.toLowerCase();
   allMarkers.forEach(marker=>{
-    var id = safeId(marker.alliance);
-    if(activeAlliances.has(id) && marker.playerName.includes(query)){
+    if(activeAlliances.has(marker.alliance) && marker.playerName.includes(query)){
       marker.setStyle({opacity:1, fillOpacity:1});
       marker.bringToFront();
     } else {
@@ -135,14 +138,14 @@ function updateAllianceVisibility(){
   });
 }
 
-// 搜索功能
-var searchInput = document.getElementById('search');
-searchInput.addEventListener('input', updateAllianceVisibility);
-
 // 初始加载
 loadPlayers();
 // 自动刷新，每10秒
 setInterval(loadPlayers, 10000);
+
+// 搜索功能
+var searchInput = document.getElementById('search');
+searchInput.addEventListener('input', updateAllianceVisibility);
 
 </script>
 </body>
