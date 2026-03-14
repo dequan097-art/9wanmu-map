@@ -52,19 +52,25 @@ function getRandomColor(){
   return color;
 }
 
+// 安全生成 id（联盟名字里有空格或特殊字符也能用）
+function safeId(str){
+  return str.replace(/\W/g,'_');
+}
+
 // 创建联盟复选框
 function createAllianceCheckbox(alliance){
-  if(document.getElementById('chk_'+alliance)) return; // 已存在
+  var id = safeId(alliance);
+  if(document.getElementById('chk_'+id)) return; // 已存在
   var checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.checked = true;
   checkbox.className = 'alliance-checkbox';
-  checkbox.id = 'chk_'+alliance;
+  checkbox.id = 'chk_'+id;
   checkbox.addEventListener('change', updateAllianceVisibility);
   document.getElementById('alliances').appendChild(checkbox);
   
   var label = document.createElement('label');
-  label.htmlFor = 'chk_'+alliance;
+  label.htmlFor = 'chk_'+id;
   label.innerText = alliance;
   label.style.marginRight='15px';
   document.getElementById('alliances').appendChild(label);
@@ -78,18 +84,18 @@ function loadPlayers(){
       // 清理旧点
       allMarkers.forEach(m => map.removeLayer(m));
       allMarkers = [];
-      activeAlliances.clear();
       document.getElementById('alliances').innerHTML = '';
+      activeAlliances.clear();
 
       data.forEach(row=>{
-        var name = row["玩家"];          
+        var name = row["玩家"];      // 对应你 JSON 字段
         var alliance = row["联盟名字"];
         var x = parseFloat(row["X坐标"]);
         var y = parseFloat(row["Y坐标"]);
 
         if(!allianceColors[alliance]) allianceColors[alliance] = getRandomColor();
         createAllianceCheckbox(alliance);
-        activeAlliances.add(alliance);
+        activeAlliances.add(safeId(alliance));
 
         var marker = L.circleMarker([y,x], {
           radius:6,
@@ -119,7 +125,8 @@ function updateAllianceVisibility(){
   
   var query = searchInput.value.toLowerCase();
   allMarkers.forEach(marker=>{
-    if(activeAlliances.has(marker.alliance) && marker.playerName.includes(query)){
+    var id = safeId(marker.alliance);
+    if(activeAlliances.has(id) && marker.playerName.includes(query)){
       marker.setStyle({opacity:1, fillOpacity:1});
       marker.bringToFront();
     } else {
@@ -128,16 +135,15 @@ function updateAllianceVisibility(){
   });
 }
 
+// 搜索功能
+var searchInput = document.getElementById('search');
+searchInput.addEventListener('input', updateAllianceVisibility);
+
 // 初始加载
 loadPlayers();
 // 自动刷新，每10秒
 setInterval(loadPlayers, 10000);
 
-// 搜索功能
-var searchInput = document.getElementById('search');
-searchInput.addEventListener('input', updateAllianceVisibility);
-
 </script>
-
 </body>
 </html>
