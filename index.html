@@ -40,8 +40,8 @@ var allMarkers = [];
 var allianceColors = {}; 
 var activeAlliances = new Set();
 
-// Apps Script Web App URL (替换为你的)
-var jsonUrl = "https://script.google.com/macros/s/AKfycbyBlLwGA1y7aB_6_yXUeWh5UUa1bMA4IghG667wbdtri1MTyNufgUUdrm6JXd35LLT1/exec";
+// 替换为你的 Apps Script Web App URL
+var jsonUrl = "https://script.google.com/macros/s/AKfycbwRWBbnSM2RWRB1banLmG-MZKR_0zgWsA1tzf4YYwbdMWJoDRNir453Sv70a_htVoBk/exec";
 
 // 生成随机颜色
 function getRandomColor(){
@@ -82,10 +82,9 @@ function loadPlayers(){
   fetch(jsonUrl + "?t=" + new Date().getTime())
     .then(res => res.json())
     .then(data => {
-      console.log("总条目数量:", data.length); // 调试输出
-      console.log(data); // 调试输出所有数据
+      console.log("总条目数量:", data.length);
+      console.log(data);
 
-      // 清理旧点
       allMarkers.forEach(m => map.removeLayer(m));
       allMarkers = [];
       document.getElementById('alliances').innerHTML = '';
